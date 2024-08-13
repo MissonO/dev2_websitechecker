@@ -6,8 +6,8 @@ import urllib.parse
 def fetch_page(url):
     """
     Fetch the page from the url
-    PRE : url should be a string
-    POST : Return the content of the url as string
+    PRE : url should be a string of an url
+    POST : Return the content of the url as string and None if the request fail
     RAISE : requests.RequestException if trouble with the http request
     """
     try:
@@ -22,7 +22,7 @@ def count_links(soup):
     """
     Count the links on the page
     PRE : soup is a BeautifulSoup object
-    POST : Return the number of links and the href details of each link
+    POST : Return a tuple of the number of clickable links as an integer and of href links
     """
     links = soup.find_all('a', href=True)
     return len(links), [link['href'] for link in links]
@@ -31,7 +31,7 @@ def count_images(soup):
     """
     Count the images on the page
     PRE : soup is a BeautifulSoup object
-    POST : Return the number of images and the source details of each image
+    POST : Return a tuple of the number of images as an integer and the src of each image
     """
     images = soup.find_all('img', src=True)
     return len(images), [img['src'] for img in images]
@@ -40,7 +40,7 @@ def display_statistics(count, details, type_):
     """
     Display the statistics
     PRE : count should be a int, details a list of strings and type_ a string
-    POST : Print the number of object requested and if details is not null, print the details
+    POST : Print the number of type_ requested and if details is not null, print the details
     """
     print(f"Number of {type_}: {count}")
     if details:
@@ -51,8 +51,8 @@ def display_statistics(count, details, type_):
 def save_to_file(filename, count, details, type_):
     """
     Save the data on a file
-    PRE : filename is a pathname, count an integer, details a list of string and type_ a string
-    POST : Write the data into the file and print a confirmation message
+    PRE : filename is a filename with his path, count an integer, details a list of string and type_ a string
+    POST : Write the data in the file and print a confirmation message
     """
     with open(filename, 'w') as file:
         file.write(f"Number of {type_}: {count}\n")
