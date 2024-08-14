@@ -2,13 +2,15 @@ import argparse
 import requests
 from bs4 import BeautifulSoup
 import urllib.parse
+import psutil
+import time
 
 def fetch_page(url):
     """
     Fetch the page from the url
     PRE : url should be a string of an url
     POST : Return the content of the url as string and None if the request fail
-    RAISE : requests.RequestException if trouble with the http request
+    RAISE : requests.RequestException if trouble with the http request for the page
     """
     try:
         response = requests.get(url)
@@ -62,6 +64,17 @@ def save_to_file(filename, count, details, type_):
                 file.write(f"{i}. {detail}\n")
     print(f"Results saved to {filename}")
 
+def print_system_resources():
+    """
+    Print the current system resource usage
+    POST : Print cpu, memory, disk and network usage
+    """
+    print("\nSystem Resource Usage:")
+    print(f"CPU usage: {psutil.cpu_percent()}%")
+    print(f"Memory usage: {psutil.virtual_memory().percent}%")
+    print(f"Disk usage: {psutil.disk_usage('/').percent}%")
+    print(f"Network I/O: {psutil.net_io_counters().bytes_sent / 1024:.2f} KB sent, {psutil.net_io_counters().bytes_recv / 1024:.2f} KB received")
+
 def main():
     parser = argparse.ArgumentParser(description='Count and analyze links or images on a web page.')
     parser.add_argument('url', help='The URL of the web page to analyze.')
@@ -70,6 +83,7 @@ def main():
     parser.add_argument('-s', '--save', help='Save the results to a file.')
     parser.add_argument('-d', '--detailed', action='store_true', help='Display detailed information about links or images.')
     parser.add_argument('--stats', action='store_true', help='Display additional statistics such as link URLs and image sizes.')
+    parser.add_argument('-r','--ressources', action='store_true', help='Display system resources usage before and after the page processing.')
 
     args = parser.parse_args()
     
@@ -78,11 +92,21 @@ def main():
         return
     
     if not args.link and not args.picture:
-        args.link = True  # Default to counting links if no option is specified
-    
+        args.link = True 
+
+    if args.ressources:
+        print("Before fetching the page:")
+        print_system_resources()
+        start_time = time.time()
+
     page_content = fetch_page(args.url)
     if not page_content:
         return
+
+    if args.ressources:
+        print("\nAfter fetching the page:")
+        print_system_resources()
+        print(f"Time taken to fetch the page: {time.time() - start_time:.2f} seconds")
 
     soup = BeautifulSoup(page_content, 'html.parser')
     
@@ -113,6 +137,10 @@ def main():
 
     if args.save:
         save_to_file(args.save, count, details, 'clickable links' if args.link else 'images')
+
+    if args.ressources:
+        print("\nAfter processing the page:")
+        print_system_resources()
 
 if __name__ == '__main__':
     main()
